@@ -1,5 +1,5 @@
 import argparse
-import libmypipe
+import libcsv2sqlite
 
 parser = argparse.ArgumentParser(
     description='Generate databases or import data into existing databases.'
@@ -40,7 +40,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-libmypipe.csv_to_sqlite3(
+libcsv2sqlite.csv_to_sqlite3(
     args.input,
     args.mapping,
     args.output,

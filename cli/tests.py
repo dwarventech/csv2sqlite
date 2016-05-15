@@ -1,4 +1,4 @@
-import libmypipe
+import libcsv2sqlite
 import dbutils
 import unittest
 
@@ -16,13 +16,13 @@ class MappingTest(unittest.TestCase):
         dbutils.delete_database(cls.db_path)
 
     def test_load_mapping_config(self):
-        table_name, mappings = libmypipe.load_mapping_config(self.mapping_path)
+        table_name, mappings = libcsv2sqlite.load_mapping_config(self.mapping_path)
         
         self.assertEqual(len(mappings), 5)
         self.assertEqual(table_name, 'person')
     
     def test_csv_to_sqlite3(self):
-        libmypipe.csv_to_sqlite3(
+        libcsv2sqlite.csv_to_sqlite3(
             self.csv_path,
             self.mapping_path,
             self.db_path)
@@ -48,7 +48,7 @@ class MappingTestForeignKey(unittest.TestCase):
         dbutils.delete_database(cls.db_path)
 
     def test_csv_to_sqlite3(self):
-        libmypipe.csv_to_sqlite3(
+        libcsv2sqlite.csv_to_sqlite3(
             self.csv_path,
             self.mapping_path,
             self.db_path)

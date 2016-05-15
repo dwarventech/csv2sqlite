@@ -4,7 +4,7 @@
 	"isShellCommand": true,
 	"showOutput": "always",
 	"args": [
-		"${workspaceRoot}/cli/mypipe.py",
+		"${workspaceRoot}/cli/csv2sqlite.py",
 		"--mapping", "test/test1_mapping.json", "--input", "test/test1.csv", "--output", "tmp/test1.sqlite3"
 	]
 }

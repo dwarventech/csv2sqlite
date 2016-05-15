@@ -1,6 +1,6 @@
 #CSV to SQLite Importer
 
-csv2sqlite is a command line application that can transform CSV documents into fully operational SQlite3 databases.
+csv2sqlite is a command line application that can transform CSV documents into fully operational SQLite3 databases.
 
 ##Key features:
 

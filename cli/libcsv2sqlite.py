@@ -161,7 +161,6 @@ def csv_to_sqlite3(csv_path, mapping_path, db_path, csv_has_title_columns=False)
     # Load fk tables    
     fk_mappings, pk_mapping = read_key_mappings(all_csv_data, mappings)
     
-    
     fk_patch_data = fk_mappings_to_database(fk_mappings)    
     
     # Substitute data with foreign key IDs
