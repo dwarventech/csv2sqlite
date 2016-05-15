@@ -25,35 +25,61 @@ def table_does_exist(table_name):
     return results != None
 
 
-def create_table(table_name):
-    if not table_does_exist(table_name):
-        c = connection.cursor()
-        c.execute('CREATE TABLE %s ( ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL )' % (table_name,))
-        c.close()
-        return True
+def create_table(table_name, mappings=[]):
+    if table_does_exist(table_name):
+        return False
+    
+    columns = []
+    key_columns = []
+    
+    for mapping in mappings:
+        data_type =  mapping['data_type']
+        column_name = mapping['column_name']
         
-    return False
+        if 'key' in mapping:
+            if mapping['key'] == 'fk':
+                # Create "foreign key table"
+                create_table(column_name, [{
+                    'column_name': 'value',
+                    'data_type': data_type
+                }])
+                column_name = column_name + '_id'
+            else:
+                key_columns.append(column_name)
+            
+        columns.append('{} {}'.format(column_name, data_type))
+        
+    if len(key_columns) == 0:
+        key_columns.append('id')
+        columns.insert(0, 'id INTEGER')
+    
+    columns_str = ', '.join(columns)
+    key_columns_str = ', '.join(key_columns)
+    
+    query = 'CREATE TABLE {} ({}, PRIMARY KEY ({}))'.format(
+        table_name, columns_str, key_columns_str)
+    
+    c = connection.cursor()
+    c.execute(query)
+    c.close()
+    
+    return True
+    
 
-# TODO: SQLite does not allow alter column statements to add primary keys
-def add_column(table_name, column_name, db_data_type='VARCHAR(-1)', pk=False):
+def insert(table_name, records):
+    formatted_keys = ', '.join(["'{}'".format(val) for val in records.keys()])
+    formatted_values = ', '.join(["'{}'".format(val) for val in records.values()])
+    
+    query = 'INSERT INTO {} ({}) VALUES ({})'.format(
+        table_name, formatted_keys, formatted_values)
+    
     c = connection.cursor()
     
-    # Try creating. If it already exists, it'll just pass
-    create_table(table_name)
-    
     try:
-    
-        if column_name == 'email':
-            import pdb; pdb.set_trace()
-    
-        c.execute('ALTER TABLE %s ADD COLUMN %s %s %s' %(
-            table_name,
-            column_name,
-            db_data_type,
-            'PRIMARY KEY' if pk else ''))
-            
+        c.execute(query)
+        connection.commit()
         success = True
-    except Exception as detail:
+    except sqlite3.IntegrityError:
         success = False
     
     c.close()
@@ -61,37 +87,10 @@ def add_column(table_name, column_name, db_data_type='VARCHAR(-1)', pk=False):
     return success
 
 
-def insert(table_name, values):
-    c = connection.cursor()
-    
-    query = 'INSERT INTO %s (' % (table_name,)
-    
-    for k in values.keys():
-        query += '%s,' % (k,) 
-        
-    # Remove last comma
-    query = query[:-1]
-    
-    query += ') VALUES ('
-    
-    for v in values.values():
-        query += "'%s'," % (v,)
-        
-    # Remove last comma
-    query = query[:-1]
-    
-    query += ')'   
-    
-    c.execute(query)
-    connection.commit()
-    
-    c.close()
-
-
 def count(table_name):
     c = connection.cursor()
     
-    c.execute('SELECT COUNT(*) FROM %s' % (table_name,))
+    c.execute('SELECT COUNT(*) FROM {}'.format(table_name))
     results = c.fetchone()
     
     c.close()
@@ -104,7 +103,7 @@ def select_all(table_name, columns):
     
     joined_columns = ', '.join(columns)
     
-    c.execute('SELECT %s FROM %s' % (joined_columns, table_name,))
+    c.execute('SELECT {} FROM {}'.format(joined_columns, table_name))
     results = c.fetchall()
     
     c.close()

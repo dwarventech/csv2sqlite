@@ -3,13 +3,13 @@
     "mappings": [
         {
             "csv_index": 0,
-            "name": "email",
+            "column_name": "email",
             "key": "pk",
             "insert_mode": "replace"
         },
         {
             "csv_index": 1,
-            "name": "phone"
+            "column_name": "phone"
         }
     ]
 }

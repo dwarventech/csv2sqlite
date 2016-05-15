@@ -28,10 +28,6 @@ class MappingTest(unittest.TestCase):
             self.db_path)
             
         self.assertTrue(dbutils.table_does_exist('person'))
-        
-        # Adding a column should return false because it already exists
-        self.assertFalse(dbutils.add_column('person', 'name'))
-        
         self.assertEqual(dbutils.count('person'), 2)
         
         
@@ -54,12 +50,30 @@ class MappingTestForeignKey(unittest.TestCase):
             self.db_path)
             
         self.assertTrue(dbutils.table_does_exist('person'))
-        
-        # Adding a column should return false because it already exists
-        self.assertFalse(dbutils.add_column('person', 'name'))
-        
         self.assertEqual(dbutils.count('person'), 4)
+
+
+class MappingTestPrimaryKey(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.db_path = 'tmp/test3.sqlite3'
+        cls.mapping_path = 'test/test3_mapping.json'
+        cls.csv_path = 'test/test3.csv'
+
+    @classmethod
+    def tearDownClass(cls):
+        dbutils.connection.close()
+        dbutils.delete_database(cls.db_path)
+
+    def test_csv_to_sqlite3(self):
+        libcsv2sqlite.csv_to_sqlite3(
+            self.csv_path,
+            self.mapping_path,
+            self.db_path)
         
+        # If there was no pk, there should be 3 results
+        self.assertEqual(dbutils.count('taxi'), 2)
+                   
 
 class DbUtilsTest(unittest.TestCase):
     @classmethod
@@ -83,32 +97,13 @@ class DbUtilsTest(unittest.TestCase):
         b = dbutils.table_does_exist(table_name)
         self.assertTrue(b)
         
-    def test_add_column(self):
-        table_name = 'hmmm'
-        b = dbutils.create_table(table_name)
-        self.assertTrue(b)
-        
-        b = dbutils.add_column(table_name, 'yeah')
-        self.assertTrue(b)
-        
-        # Try adding again
-        b = dbutils.add_column(table_name, 'yeah')
-        self.assertFalse(b)
-        
-    def test_add_column_and_table(self):
-        table_name = 'hmmm2'
-        
-        b = dbutils.add_column(table_name, 'yeah')
-        self.assertTrue(b)
-        
-        b = dbutils.table_does_exist(table_name)
-        self.assertTrue(b)
-    
     def test_select_all(self):
         table_name = 'hmmm3'
         
-        b = dbutils.add_column(table_name, 'yeah')
-        self.assertTrue(b)
+        b = dbutils.create_table(table_name, [{
+            'column_name': 'yeah',
+            'data_type': 'VARCHAR(-1)'
+        }])
         
         dbutils.insert(table_name, { 'yeah': 'bla' })
         dbutils.insert(table_name, { 'yeah': 'ble' })
