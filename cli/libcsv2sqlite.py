@@ -1,6 +1,8 @@
+import os
 import csv
 import json
 import collections
+import importlib.util
 
 import dbutils
 import transformations
@@ -9,7 +11,9 @@ import transformations
 def load_mapping_config(mapping_path):
     with open(mapping_path) as data_file:    
         j = json.load(data_file)
-        return j['table_name'], j['mappings']
+        
+        t = j['transformations'] if 'transformations' in j else None
+        return (j['table_name'], t, j['mappings'])
 
 
 def get_mappings_by_csv_index(mappings, index):
@@ -135,6 +139,26 @@ def set_mapping_defaults(mappings, headers):
             mapping['column_name'] = headers[i]
     
 
+def load_custom_transformations(mapping_path, custom_transformations_path):
+    # use json path as reference
+    path = os.path.abspath(os.path.dirname(mapping_path))
+
+    # remove extension
+    module_name = os.path.splitext(custom_transformations_path)[0]
+    
+    # custom loading stuff
+    spec = importlib.util.spec_from_file_location(
+        module_name, os.path.join(path, custom_transformations_path))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    
+    for function_name in dir(module):
+        # Remove internal stuff
+        if function_name[0:2] != '__':
+            func = getattr(module, function_name)
+            setattr(transformations, function_name, func)
+
+
 def csv_to_sqlite3(csv_path, mapping_path, db_path, csv_has_title_columns=False):
     # Load csv file into a list
     all_csv_data = []
@@ -151,7 +175,10 @@ def csv_to_sqlite3(csv_path, mapping_path, db_path, csv_has_title_columns=False)
     dbutils.create_and_connect(db_path)
     
     # Load config
-    table_name, mappings = load_mapping_config(mapping_path)
+    table_name, custom_transformations, mappings = load_mapping_config(mapping_path)
+    
+    if custom_transformations:
+        load_custom_transformations(mapping_path, custom_transformations)
     
     set_mapping_defaults(mappings, headers)
 

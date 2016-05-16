@@ -1,7 +1,7 @@
 import libcsv2sqlite
 import dbutils
 import unittest
-
+import transformations
 
 class MappingTest(unittest.TestCase):
     @classmethod
@@ -16,7 +16,7 @@ class MappingTest(unittest.TestCase):
         dbutils.delete_database(cls.db_path)
 
     def test_load_mapping_config(self):
-        table_name, mappings = libcsv2sqlite.load_mapping_config(self.mapping_path)
+        table_name, transformations, mappings = libcsv2sqlite.load_mapping_config(self.mapping_path)
         
         self.assertEqual(len(mappings), 5)
         self.assertEqual(table_name, 'person')
@@ -81,12 +81,13 @@ class MappingTestFirstLine(unittest.TestCase):
         cls.db_path = 'tmp/test4.sqlite3'
         cls.mapping_path = 'test/test4_mapping.json'
         cls.csv_path = 'test/test4.csv'
+        cls.csv_has_title_columns = True
         
         libcsv2sqlite.csv_to_sqlite3(
             cls.csv_path,
             cls.mapping_path,
             cls.db_path,
-            True)
+            cls.csv_has_title_columns)
         
     @classmethod
     def tearDownClass(cls):
@@ -100,6 +101,29 @@ class MappingTestFirstLine(unittest.TestCase):
         self.assertTrue(dbutils.column_exists('taxi', 'HappyEmail'))
         self.assertTrue(dbutils.column_exists('taxi', 'phone'))
 
+
+class CustomTransformationsTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.db_path = 'tmp/test5.sqlite3'
+        cls.mapping_path = 'test/test5_mapping.json'
+        cls.csv_path = 'test/test5.csv'
+        cls.csv_has_title_columns = True
+        
+        libcsv2sqlite.csv_to_sqlite3(
+            cls.csv_path,
+            cls.mapping_path,
+            cls.db_path,
+            cls.csv_has_title_columns)
+        
+    @classmethod
+    def tearDownClass(cls):
+        dbutils.connection.close()
+        dbutils.delete_database(cls.db_path)
+
+    def test_explode_existence(self):
+        self.assertTrue(hasattr(transformations, 'explode'))
+    
 
 class DbUtilsTest(unittest.TestCase):
     @classmethod
