@@ -3,7 +3,6 @@
     "mappings": [
         {
             "csv_index": 0,
-            "column_name": "email",
             "key": "pk",
             "insert_mode": "replace"
         },

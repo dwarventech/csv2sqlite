@@ -27,7 +27,7 @@ class MappingTest(unittest.TestCase):
             self.mapping_path,
             self.db_path)
             
-        self.assertTrue(dbutils.table_does_exist('person'))
+        self.assertTrue(dbutils.table_exists('person'))
         self.assertEqual(dbutils.count('person'), 2)
         
         
@@ -49,7 +49,7 @@ class MappingTestForeignKey(unittest.TestCase):
             self.mapping_path,
             self.db_path)
             
-        self.assertTrue(dbutils.table_does_exist('person'))
+        self.assertTrue(dbutils.table_exists('person'))
         self.assertEqual(dbutils.count('person'), 4)
 
 
@@ -81,20 +81,24 @@ class MappingTestFirstLine(unittest.TestCase):
         cls.db_path = 'tmp/test4.sqlite3'
         cls.mapping_path = 'test/test4_mapping.json'
         cls.csv_path = 'test/test4.csv'
-
+        
+        libcsv2sqlite.csv_to_sqlite3(
+            cls.csv_path,
+            cls.mapping_path,
+            cls.db_path,
+            True)
+        
     @classmethod
     def tearDownClass(cls):
         dbutils.connection.close()
         dbutils.delete_database(cls.db_path)
 
     def test_csv_to_sqlite3(self):
-        libcsv2sqlite.csv_to_sqlite3(
-            self.csv_path,
-            self.mapping_path,
-            self.db_path,
-            True)
-        
-        self.assertEqual(dbutils.count('taxi'), 2)           
+        self.assertEqual(dbutils.count('taxi'), 2)
+    
+    def test_column_names(self):
+        self.assertTrue(dbutils.column_exists('taxi', 'HappyEmail'))
+        self.assertTrue(dbutils.column_exists('taxi', 'phone'))
 
 
 class DbUtilsTest(unittest.TestCase):
@@ -110,13 +114,13 @@ class DbUtilsTest(unittest.TestCase):
         
     def test_table_existence(self):
         table_name = 'bla'
-        b = dbutils.table_does_exist(table_name)
+        b = dbutils.table_exists(table_name)
         self.assertFalse(b)
 
         b = dbutils.create_table(table_name)
         self.assertTrue(b)
         
-        b = dbutils.table_does_exist(table_name)
+        b = dbutils.table_exists(table_name)
         self.assertTrue(b)
         
     def test_select_all(self):

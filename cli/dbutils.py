@@ -14,7 +14,7 @@ def delete_database(db_path):
     os.remove(db_path)
 
 
-def table_does_exist(table_name):
+def table_exists(table_name):
     c = connection.cursor()
     
     c.execute("SELECT * FROM sqlite_master WHERE name=? and type='table'", (table_name,))
@@ -25,8 +25,23 @@ def table_does_exist(table_name):
     return results != None
 
 
+def column_exists(table_name, column_name):
+    c = connection.cursor()
+    
+    c.execute("PRAGMA table_info('{}')".format(table_name))
+    results = c.fetchall()
+    
+    for result in results:
+        if result[1] == column_name:
+            return True
+    
+    c.close()
+    
+    return False
+
+
 def create_table(table_name, mappings=[]):
-    if table_does_exist(table_name):
+    if table_exists(table_name):
         return False
     
     columns = []

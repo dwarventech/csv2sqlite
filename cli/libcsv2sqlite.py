@@ -126,32 +126,37 @@ def patch_csv_data(fk_patch_data, all_csv_data):
             row[index] = get_column_id(index, row[index], fk_patch_item['db_values'])
 
 
-def set_mapping_defaults(mappings):
-    for mapping in mappings:
+def set_mapping_defaults(mappings, headers):
+    for i, mapping in enumerate(mappings):
         if 'data_type' not in mapping:
             mapping['data_type'] = 'VARCHAR(-1)'
+        
+        if 'column_name' not in mapping and len(headers) > 0:
+            mapping['column_name'] = headers[i]
     
 
 def csv_to_sqlite3(csv_path, mapping_path, db_path, csv_has_title_columns=False):
-    dbutils.create_and_connect(db_path)
-    
-    # Load config
-    table_name, mappings = load_mapping_config(mapping_path)
-    
-    set_mapping_defaults(mappings)
-    
-    # Create database table
-    dbutils.create_table(table_name, mappings)
-    
     # Load csv file into a list
     all_csv_data = []
     with open(csv_path) as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:
             all_csv_data.append(row)
-            
+
+    headers = []
     if csv_has_title_columns:
+        headers = all_csv_data[0]
         all_csv_data = all_csv_data[1:]
+
+    dbutils.create_and_connect(db_path)
+    
+    # Load config
+    table_name, mappings = load_mapping_config(mapping_path)
+    
+    set_mapping_defaults(mappings, headers)
+
+    # Create database table
+    dbutils.create_table(table_name, mappings)
 
     # Load fk tables    
     fk_mappings, pk_mapping = read_key_mappings(all_csv_data, mappings)
