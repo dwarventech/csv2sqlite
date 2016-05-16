@@ -149,6 +149,9 @@ def csv_to_sqlite3(csv_path, mapping_path, db_path, csv_has_title_columns=False)
         reader = csv.reader(csvfile)
         for row in reader:
             all_csv_data.append(row)
+            
+    if csv_has_title_columns:
+        all_csv_data = all_csv_data[1:]
 
     # Load fk tables    
     fk_mappings, pk_mapping = read_key_mappings(all_csv_data, mappings)

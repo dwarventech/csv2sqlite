@@ -73,7 +73,29 @@ class MappingTestPrimaryKey(unittest.TestCase):
         
         # If there was no pk, there should be 3 results
         self.assertEqual(dbutils.count('taxi'), 2)
-                   
+
+
+class MappingTestFirstLine(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.db_path = 'tmp/test4.sqlite3'
+        cls.mapping_path = 'test/test4_mapping.json'
+        cls.csv_path = 'test/test4.csv'
+
+    @classmethod
+    def tearDownClass(cls):
+        dbutils.connection.close()
+        dbutils.delete_database(cls.db_path)
+
+    def test_csv_to_sqlite3(self):
+        libcsv2sqlite.csv_to_sqlite3(
+            self.csv_path,
+            self.mapping_path,
+            self.db_path,
+            True)
+        
+        self.assertEqual(dbutils.count('taxi'), 2)           
+
 
 class DbUtilsTest(unittest.TestCase):
     @classmethod

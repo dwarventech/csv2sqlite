@@ -1,0 +1,15 @@
+{
+    "table_name": "taxi",
+    "mappings": [
+        {
+            "csv_index": 0,
+            "column_name": "email",
+            "key": "pk",
+            "insert_mode": "replace"
+        },
+        {
+            "csv_index": 1,
+            "column_name": "phone"
+        }
+    ]
+}
