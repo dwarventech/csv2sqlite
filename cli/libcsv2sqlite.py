@@ -1,4 +1,5 @@
 import os
+import re
 import csv
 import json
 import collections
@@ -136,7 +137,8 @@ def set_mapping_defaults(mappings, headers):
             mapping['data_type'] = 'VARCHAR(-1)'
         
         if 'column_name' not in mapping and len(headers) > 0:
-            mapping['column_name'] = headers[i]
+            # Replace column name (do some cleaning first)
+            mapping['column_name'] = re.sub('[^0-9a-zA-Z]+', '_', headers[i])
     
 
 def load_custom_transformations(mapping_path, custom_transformations_path):

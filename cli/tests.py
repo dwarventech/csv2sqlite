@@ -123,7 +123,34 @@ class CustomTransformationsTest(unittest.TestCase):
 
     def test_explode_existence(self):
         self.assertTrue(hasattr(transformations, 'explode'))
-    
+
+
+class WeirdHeadersTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.db_path = 'tmp/test6.sqlite3'
+        cls.mapping_path = 'test/test6_mapping.json'
+        cls.csv_path = 'test/test6.csv'
+        cls.csv_has_title_columns = True
+        
+        libcsv2sqlite.csv_to_sqlite3(
+            cls.csv_path,
+            cls.mapping_path,
+            cls.db_path,
+            cls.csv_has_title_columns)
+        
+    @classmethod
+    def tearDownClass(cls):
+        dbutils.connection.close()
+        dbutils.delete_database(cls.db_path)
+
+    def test_explode_existence(self):
+        # Happy $8124 0*$ Email
+        self.assertTrue(dbutils.column_exists('taxi', 'Happy_8124_0_Email'))
+        
+        # )()(Happy   @@ Ph@one $$ 
+        self.assertTrue(dbutils.column_exists('taxi', '_Happy_Ph_one_'))
+
 
 class DbUtilsTest(unittest.TestCase):
     @classmethod
