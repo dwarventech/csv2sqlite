@@ -7,7 +7,7 @@ class MappingTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.db_path = 'tmp/test1.sqlite3'
-        cls.mapping_path = 'test/test1_mapping.json'
+        cls.mapping_path = 'test/test1.json'
         cls.csv_path = 'test/test1.csv'
 
     @classmethod
@@ -35,7 +35,7 @@ class MappingTestForeignKey(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.db_path = 'tmp/test2.sqlite3'
-        cls.mapping_path = 'test/test2_mapping.json'
+        cls.mapping_path = 'test/test2.json'
         cls.csv_path = 'test/test2.csv'
 
     @classmethod
@@ -57,7 +57,7 @@ class MappingTestPrimaryKey(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.db_path = 'tmp/test3.sqlite3'
-        cls.mapping_path = 'test/test3_mapping.json'
+        cls.mapping_path = 'test/test3.json'
         cls.csv_path = 'test/test3.csv'
 
     @classmethod
@@ -79,7 +79,7 @@ class MappingTestFirstLine(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.db_path = 'tmp/test4.sqlite3'
-        cls.mapping_path = 'test/test4_mapping.json'
+        cls.mapping_path = 'test/test4.json'
         cls.csv_path = 'test/test4.csv'
         cls.csv_has_title_columns = True
         
@@ -106,7 +106,7 @@ class CustomTransformationsTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.db_path = 'tmp/test5.sqlite3'
-        cls.mapping_path = 'test/test5_mapping.json'
+        cls.mapping_path = 'test/test5.json'
         cls.csv_path = 'test/test5.csv'
         cls.csv_has_title_columns = True
         
@@ -129,7 +129,7 @@ class WeirdHeadersTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.db_path = 'tmp/test6.sqlite3'
-        cls.mapping_path = 'test/test6_mapping.json'
+        cls.mapping_path = 'test/test6.json'
         cls.csv_path = 'test/test6.csv'
         cls.csv_has_title_columns = True
         
@@ -156,7 +156,7 @@ class AnonymousColumnsTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.db_path = 'tmp/test8.sqlite3'
-        cls.mapping_path = 'test/test8_mapping.json'
+        cls.mapping_path = 'test/test8.json'
         cls.csv_path = 'test/test8.csv'
         cls.csv_has_title_columns = False
         
@@ -180,7 +180,7 @@ class MissingColumnTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.db_path = 'tmp/test9.sqlite3'
-        cls.mapping_path = 'test/test9_mapping.json'
+        cls.mapping_path = 'test/test9.json'
         cls.csv_path = 'test/test9.csv'
         cls.csv_has_title_columns = True
         
@@ -308,6 +308,21 @@ class DataTypeGuesserTest(unittest.TestCase):
 
 class DuplicateMappingColumnNameTest(unittest.TestCase):
     def test_duplicates(self):
-        pass
+        mappings = [
+            { "column_name": "Name" },
+            { "column_name": "Name_1" },
+            { "column_name": "Name" },
+            { "column_name": "Animal" },
+            { "column_name": "Animal" }
+        ]
+        
+        libcsv2sqlite.uniquefy_names(mappings)
+        
+        self.assertEqual(mappings[0]['column_name'], 'Name')
+        self.assertEqual(mappings[1]['column_name'], 'Name_1')
+        self.assertEqual(mappings[2]['column_name'], 'Name_2')
+        self.assertEqual(mappings[3]['column_name'], 'Animal')
+        self.assertEqual(mappings[4]['column_name'], 'Animal_1')
+        
 
 unittest.main()

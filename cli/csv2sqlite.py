@@ -31,17 +31,27 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '--csv-has-title-columns', '-c',
+    '--csv-has-title-columns', '-t',
     help='Indicates if the first line in the CSV file contains title columns',
     action='store_true',
     required=False,
     default=False
 )
 
+parser.add_argument(
+    '--compression', '-c',
+    help='Compression: gzip or bz2',
+    required=False,
+    default=None
+)
+
+
 args = parser.parse_args()
 
+# TODO - Pass all args in one thing
 libcsv2sqlite.csv_to_sqlite3(
     args.input,
     args.mapping,
     args.output,
-    args.csv_has_title_columns)
+    args.csv_has_title_columns,
+    args.compression)

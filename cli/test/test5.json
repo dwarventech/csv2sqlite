@@ -1,6 +1,6 @@
 {
     "table_name": "taxi",
-    "transformations": "test5_transforms.py",
+    "transformations": "test5.py",
     "mappings": [
         {
             "csv_index": 0,

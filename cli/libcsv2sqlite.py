@@ -1,6 +1,9 @@
 import os
 import re
+import bz2
 import csv
+import sys
+import gzip
 import json
 import collections
 import importlib.util
@@ -206,6 +209,30 @@ def guess_column_type(generator):
     return int
 
 
+# TODO - Refactor
+def uniquefy_names(mappings):
+    names = {}
+    
+    for mapping in mappings:
+        names[mapping['column_name']] = 0
+        
+    for mapping in mappings:
+        count = names[mapping['column_name']]
+        
+        if count == 0:
+            names[mapping['column_name']] += 1
+        else:
+            key = mapping['column_name'] + '_' + str(count)
+            
+            while key in names.keys():
+                count += 1
+                key = mapping['column_name'] + '_' + str(count)
+           
+            names[mapping['column_name']] = count + 1
+            mapping['column_name'] = key
+    
+
+
 def csv_read_row(row, mappings):
     changed_row = []
     
@@ -224,19 +251,32 @@ def csv_read_row(row, mappings):
     return changed_row
     
 
-def csv_read_file(csv_path, mappings):
+def csv_read_file(csv_path, mappings, compression=None):
     all_csv_data = []
     
-    with open(csv_path) as csvfile:
-        reader = csv.reader(csvfile)
-        for row in reader:
-            changed_row = csv_read_row(row, mappings)
-            all_csv_data.append(changed_row)
+    read_mode = 'rt' if sys.version_info[0] > 2 else 'rU'
     
+    if compression is None:
+        csv_file = open(csv_path, mode=read_mode)
+    elif compression == 'bz2':
+        try:
+            csv_file = bz2.open(csv_path, mode=read_mode)
+        except AttributeError:
+            csv_file = bz2.BZ2File(csv_path, mode='r')
+    elif compression == 'gzip':
+        csv_file = gzip.open(csv_path, mode=read_mode)
+
+    reader = csv.reader(csv_file)
+    for row in reader:
+        changed_row = csv_read_row(row, mappings)
+        all_csv_data.append(changed_row)
+
+    csv_file.close()
+
     return all_csv_data
 
 
-def csv_to_sqlite3(csv_path, mapping_path, db_path, csv_has_title_columns=False):
+def csv_to_sqlite3(csv_path, mapping_path, db_path, csv_has_title_columns=False, compression=None):
     # Load config
     table_name, custom_transformations, mappings = load_mapping_config(mapping_path)
     
@@ -245,7 +285,7 @@ def csv_to_sqlite3(csv_path, mapping_path, db_path, csv_has_title_columns=False)
         load_custom_transformations(mapping_path, custom_transformations)
         
     # Load csv file into a list
-    all_csv_data = csv_read_file(csv_path, mappings)
+    all_csv_data = csv_read_file(csv_path, mappings, compression)
 
     # Remove headers
     headers = []

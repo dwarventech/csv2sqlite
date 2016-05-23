@@ -1,3 +1,3 @@
-Name,Age
-Bob,23
-Mary,33
+Name,Gender,Age
+Bob,M,23
+Jane,F,34
