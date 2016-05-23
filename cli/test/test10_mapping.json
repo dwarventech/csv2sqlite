@@ -1,0 +1,12 @@
+{
+    "table_name": "person",
+    "mappings": [
+        {
+            "csv_index": 0,
+            "transform": "sqlite_upper"
+        },
+        {
+            "csv_index": 0
+        }
+    ]
+}

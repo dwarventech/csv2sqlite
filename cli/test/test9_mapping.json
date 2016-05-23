@@ -1,0 +1,13 @@
+{
+    "table_name": "person",
+    "mappings": [
+        {
+            "csv_index": 0,
+            "key": "pk",
+            "column_name": "pretty_name"
+        },
+        {
+            "csv_index": 2
+        }
+    ]
+}

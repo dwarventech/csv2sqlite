@@ -1,4 +1,5 @@
 import os
+import re
 import csv
 import json
 import collections
@@ -140,8 +141,12 @@ def set_mapping_defaults(all_csv_data, mappings, headers):
             # column_index = int(mapping['csv_index'])
             mapping['data_type'] = types[i]
         
-        if 'column_name' not in mapping and len(headers) > 0:
-            mapping['column_name'] = headers[i]
+        if 'column_name' not in mapping:
+            if len(headers) > 0:
+                # Replace column name (do some cleaning first)
+                mapping['column_name'] = re.sub('[^0-9a-zA-Z]+', '_', headers[i])
+            else:
+                mapping['column_name'] = 'column_' + str(i)
     
     
 
