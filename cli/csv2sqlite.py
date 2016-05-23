@@ -38,13 +38,6 @@ parser.add_argument(
     default=False
 )
 
-parser.add_argument(
-    '--compression', '-c',
-    help='Compression: gzip or bz2',
-    required=False,
-    default=None
-)
-
 
 args = parser.parse_args()
 
@@ -53,5 +46,4 @@ libcsv2sqlite.csv_to_sqlite3(
     args.input,
     args.mapping,
     args.output,
-    args.csv_has_title_columns,
-    args.compression)
+    args.csv_has_title_columns)

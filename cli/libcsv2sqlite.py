@@ -5,6 +5,7 @@ import csv
 import sys
 import gzip
 import json
+import zipfile
 import collections
 import importlib.util
 from operator import itemgetter
@@ -251,22 +252,13 @@ def csv_read_row(row, mappings):
     return changed_row
     
 
-def csv_read_file(csv_path, mappings, compression=None):
+def csv_read_file(csv_path, mappings):
     all_csv_data = []
     
-    read_mode = 'rt' if sys.version_info[0] > 2 else 'rU'
-    
-    if compression is None:
-        csv_file = open(csv_path, mode=read_mode)
-    elif compression == 'bz2':
-        try:
-            csv_file = bz2.open(csv_path, mode=read_mode)
-        except AttributeError:
-            csv_file = bz2.BZ2File(csv_path, mode='r')
-    elif compression == 'gzip':
-        csv_file = gzip.open(csv_path, mode=read_mode)
-
+    csv_file = open(csv_path, mode='r')
+        
     reader = csv.reader(csv_file)
+    
     for row in reader:
         changed_row = csv_read_row(row, mappings)
         all_csv_data.append(changed_row)
@@ -276,7 +268,7 @@ def csv_read_file(csv_path, mappings, compression=None):
     return all_csv_data
 
 
-def csv_to_sqlite3(csv_path, mapping_path, db_path, csv_has_title_columns=False, compression=None):
+def csv_to_sqlite3(csv_path, mapping_path, db_path, csv_has_title_columns=False):
     # Load config
     table_name, custom_transformations, mappings = load_mapping_config(mapping_path)
     
@@ -285,7 +277,7 @@ def csv_to_sqlite3(csv_path, mapping_path, db_path, csv_has_title_columns=False,
         load_custom_transformations(mapping_path, custom_transformations)
         
     # Load csv file into a list
-    all_csv_data = csv_read_file(csv_path, mappings, compression)
+    all_csv_data = csv_read_file(csv_path, mappings)
 
     # Remove headers
     headers = []
