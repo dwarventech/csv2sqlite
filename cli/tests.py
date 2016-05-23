@@ -161,6 +161,73 @@ class DbUtilsTest(unittest.TestCase):
         all = dbutils.select_all(table_name, ['id', 'yeah'])
         
         self.assertEqual(all[0]['yeah'], 'bla')
+
+
+class TransformationsTest(unittest.TestCase):
+    def test_transformations(self):
+        self.assertEqual(transformations.sqlite_upper('aaa'), 'AAA')
+        self.assertEqual(transformations.sqlite_upper('111'), '111')
+        self.assertEqual(transformations.sqlite_upper('eAq'), 'EAQ')
         
+        self.assertEqual(transformations.sqlite_lower('AAA'), 'aaa')
+        self.assertEqual(transformations.sqlite_lower('111'), '111')
+        self.assertEqual(transformations.sqlite_lower('EAQ'), 'eaq')
+        
+        self.assertEqual(transformations.sqlite_abs(123), 123)
+        self.assertEqual(transformations.sqlite_abs(-123), 123)
+        self.assertEqual(transformations.sqlite_abs(0), 0)
+        
+        self.assertEqual(transformations.sqlite_length('EAQ'), 3)
+        self.assertEqual(transformations.sqlite_length(''), 0)
+        
+        self.assertEqual(transformations.sqlite_ltrim('     EAQ'), 'EAQ')
+        self.assertEqual(transformations.sqlite_ltrim('\tEAQ'), 'EAQ')
+        self.assertEqual(transformations.sqlite_ltrim('    EAQ   '), 'EAQ   ')
+        
+        self.assertEqual(transformations.sqlite_rtrim('EAQ    '), 'EAQ')
+        self.assertEqual(transformations.sqlite_rtrim('EAQ\t'), 'EAQ')
+        self.assertEqual(transformations.sqlite_rtrim('    EAQ   '), '    EAQ')
+        
+        self.assertEqual(transformations.sqlite_trim('EAQ    '), 'EAQ')
+        self.assertEqual(transformations.sqlite_trim('EAQ\t'), 'EAQ')
+        self.assertEqual(transformations.sqlite_trim('    EAQ   '), 'EAQ')
+        
+        self.assertTrue(isinstance(transformations.sqlite_random(), int))
+        
+        self.assertEqual(transformations.sqlite_round(4), 4)
+        self.assertEqual(transformations.sqlite_round(4.6), 5)
+        self.assertEqual(transformations.sqlite_round(4.2), 4)
+        self.assertEqual(transformations.sqlite_round(0), 0)
+        
+        self.assertEqual(transformations.sqlite_typeof(None), 'null')
+        self.assertEqual(transformations.sqlite_typeof(1), 'integer')
+        self.assertEqual(transformations.sqlite_typeof(2.34), 'real')
+        self.assertEqual(transformations.sqlite_typeof('asdasdasd'), 'text')
+
+
+class DataTypeGuesserTest(unittest.TestCase):
+    def test_data_type(self):
+        self.assertEqual(libcsv2sqlite.data_type('2'), int)
+        self.assertEqual(libcsv2sqlite.data_type('potato'), str)
+        self.assertEqual(libcsv2sqlite.data_type('2.1'), float)
+        self.assertEqual(libcsv2sqlite.data_type('0.0'), float)
+        
+    def test_guess_column_type(self):
+        def create_column_gen(mylist):
+            for val in mylist:
+                yield val;
+    
+        self.assertEqual(libcsv2sqlite.guess_column_type(create_column_gen(
+            ['2', '3', '5', '-1', '0', '1231231231', '-23123121'])), int)
+        
+        self.assertEqual(libcsv2sqlite.guess_column_type(create_column_gen(
+            ['2', '3', '5', '-1', '0.4', '1231231231', '-23123121'])), float)
+            
+        self.assertEqual(libcsv2sqlite.guess_column_type(create_column_gen(
+            [' 2', '3 ', '\t5 ', '-1', '0.4', '-12.0', '-23123121'])), float)
+        
+        self.assertEqual(libcsv2sqlite.guess_column_type(create_column_gen(
+            ['2', '3', '5', '-1', '0.4qwdqwdqwd', '1231231231', '-23123121'])), str)
+
 
 unittest.main()

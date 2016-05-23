@@ -1,0 +1,14 @@
+{
+    "table_name": "email",
+    "mappings": [
+        {
+            "csv_index": 0,
+            "key": "pk"
+        },
+        {
+            "csv_index": 0,
+            "column_name": "email_length",
+            "transform": "sqlite_length"
+        }
+    ]
+}

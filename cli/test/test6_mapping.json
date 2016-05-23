@@ -1,0 +1,19 @@
+{
+    "table_name": "taxi",
+    "mappings": [
+        {
+            "csv_index": 0,
+            "key": "pk",
+            "insert_mode": "replace"
+        },
+        {
+            "csv_index": 1,
+            "column_name": "phone"
+        },
+        {
+            "csv_index": 1,
+            "column_name": "random_thing",
+            "transform": "sqlite_random"
+        }
+    ]
+}

@@ -10,13 +10,18 @@ csv2sqlite is a command line application that can transform CSV documents into f
 - Import results to existing databases;
 - Generate primary keys automatically;
 - The first row of the CSV file can contain the name of each column to be used in the database;
-- Generate primary key for specified column
-- Specify transformations file (Python)
+- Generate primary key for specified column;
+- Specify transformations file (Python);
+- Support for more default data transformations (based on SQLite core functions);
+- Generate foreign keys for normalization tables;
+- Guesses data types for columns when they are not specified;
     
 ##Planned features:
 
-- Generate foreign keys for normalization tables;
-- Supported for data transformations after importing cell (DBMS);
+- Support for large files;
+- Support for GZIP, ZIP, TAR;
+- Default values for every option;
+- Better documentation;
 
 ##Mapping file:
 

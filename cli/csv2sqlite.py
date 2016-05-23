@@ -35,7 +35,7 @@ parser.add_argument(
     help='Indicates if the first line in the CSV file contains title columns',
     action='store_true',
     required=False,
-    default=True
+    default=False
 )
 
 args = parser.parse_args()

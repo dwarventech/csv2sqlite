@@ -3,6 +3,7 @@ import csv
 import json
 import collections
 import importlib.util
+from operator import itemgetter
 
 import dbutils
 import transformations
@@ -31,24 +32,14 @@ def import_csv_row(row, table_name, mappings):
     
     values = {}
     
-    for i in range(0, length):
-        index_mappings = get_mappings_by_csv_index(mappings, i)
+    for i, mapping in enumerate(mappings):
+        column_name = mapping['column_name']
         
-        the_value = row[i]
+        if 'key' in mapping and mapping['key'] == 'fk':
+            column_name = column_name + '_id'
         
-        for mapping in index_mappings:
-            column_name = mapping['column_name']
+        values[column_name] = row[i]
         
-            if 'transform' in mapping:
-                func_name = mapping['transform']
-                func = getattr(transformations, func_name)
-                the_value = func(the_value)
-               
-            if 'key' in mapping and mapping['key'] == 'fk':
-                column_name = column_name + '_id'
-            
-            values[column_name] = the_value
-
     dbutils.insert(table_name, values)
 
 
@@ -130,13 +121,28 @@ def patch_csv_data(fk_patch_data, all_csv_data):
             row[index] = get_column_id(index, row[index], fk_patch_item['db_values'])
 
 
-def set_mapping_defaults(mappings, headers):
+def set_mapping_defaults(all_csv_data, mappings, headers):
+    def column_gen(column_id, rows_count):
+        for i in range(0, rows_count):
+            yield all_csv_data[i][column_id]
+            
+    types = []
+    column_count = len(all_csv_data[0])
+    rows_count = len(all_csv_data)
+    
+    for i in range(0, column_count):
+        python_type = guess_column_type(column_gen(i, rows_count))
+        sqlite_type = dbutils.python_to_sqlite_type(python_type)
+        types.append(sqlite_type)
+
     for i, mapping in enumerate(mappings):
         if 'data_type' not in mapping:
-            mapping['data_type'] = 'VARCHAR(-1)'
+            # column_index = int(mapping['csv_index'])
+            mapping['data_type'] = types[i]
         
         if 'column_name' not in mapping and len(headers) > 0:
             mapping['column_name'] = headers[i]
+    
     
 
 def load_custom_transformations(mapping_path, custom_transformations_path):
@@ -159,14 +165,84 @@ def load_custom_transformations(mapping_path, custom_transformations_path):
             setattr(transformations, function_name, func)
 
 
-def csv_to_sqlite3(csv_path, mapping_path, db_path, csv_has_title_columns=False):
-    # Load csv file into a list
+def data_type(value):    
+    try:
+        int(value)
+        return int
+    except ValueError:
+        pass
+        
+    try:
+        float(value)
+        return float
+    except ValueError:
+        pass
+        
+    return str
+        
+
+def guess_column_type(generator):
+    count = {
+        int: 0,
+        float: 0,
+        str: 0
+    }
+    
+    for val in generator:
+        t = data_type(val)
+        count[t] += 1
+        
+    if count[str] > 0:
+        return str
+    
+    if count[float] > 0:
+        return float
+    
+    return int
+
+
+def csv_read_row(row, mappings):
+    changed_row = []
+    
+    for mapping in mappings:
+        index = int(mapping['csv_index'])
+        
+        val = row[index]
+        
+        if 'transform' in mapping:
+            func_name = mapping['transform']
+            func = getattr(transformations, func_name)
+            val = func(val)
+
+        changed_row.append(val)
+    
+    return changed_row
+    
+
+def csv_read_file(csv_path, mappings):
     all_csv_data = []
+    
     with open(csv_path) as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:
-            all_csv_data.append(row)
+            changed_row = csv_read_row(row, mappings)
+            all_csv_data.append(changed_row)
+    
+    return all_csv_data
 
+
+def csv_to_sqlite3(csv_path, mapping_path, db_path, csv_has_title_columns=False):
+    # Load config
+    table_name, custom_transformations, mappings = load_mapping_config(mapping_path)
+    
+    # Load custom transformations if they exist
+    if custom_transformations:
+        load_custom_transformations(mapping_path, custom_transformations)
+        
+    # Load csv file into a list
+    all_csv_data = csv_read_file(csv_path, mappings)
+
+    # Remove headers
     headers = []
     if csv_has_title_columns:
         headers = all_csv_data[0]
@@ -174,18 +250,13 @@ def csv_to_sqlite3(csv_path, mapping_path, db_path, csv_has_title_columns=False)
 
     dbutils.create_and_connect(db_path)
     
-    # Load config
-    table_name, custom_transformations, mappings = load_mapping_config(mapping_path)
+    # Set mapping defaults
+    set_mapping_defaults(all_csv_data, mappings, headers)
     
-    if custom_transformations:
-        load_custom_transformations(mapping_path, custom_transformations)
-    
-    set_mapping_defaults(mappings, headers)
-
     # Create database table
     dbutils.create_table(table_name, mappings)
 
-    # Load fk tables    
+    # Load fk tables
     fk_mappings, pk_mapping = read_key_mappings(all_csv_data, mappings)
     
     fk_patch_data = fk_mappings_to_database(fk_mappings)    

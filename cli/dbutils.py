@@ -5,6 +5,16 @@ import os
 connection = None
 
 
+def python_to_sqlite_type(python_type):
+    sqlite_types = {
+        int: 'INTEGER',
+        float: 'REAL',
+        str: 'TEXT'
+    }
+    
+    return sqlite_types[python_type]
+
+
 def create_and_connect(db_path):
     global connection
     connection = sqlite3.connect(db_path) 
@@ -44,8 +54,9 @@ def create_table(table_name, mappings=[]):
     if table_exists(table_name):
         return False
     
-    columns = []
-    key_columns = []
+    all_columns = []
+    pk_key_columns = []
+    fk_key_columns = []
     
     for mapping in mappings:
         data_type =  mapping['data_type']
@@ -58,21 +69,30 @@ def create_table(table_name, mappings=[]):
                     'column_name': 'value',
                     'data_type': data_type
                 }])
+                fk_key_columns.append(column_name)
                 column_name = column_name + '_id'
             else:
-                key_columns.append(column_name)
+                pk_key_columns.append(column_name)
             
-        columns.append('{} {}'.format(column_name, data_type))
+        all_columns.append('{} {}'.format(column_name, data_type))
         
-    if len(key_columns) == 0:
-        key_columns.append('id')
-        columns.insert(0, 'id INTEGER')
+    if len(pk_key_columns) == 0:
+        pk_key_columns.append('id')
+        all_columns.insert(0, 'id INTEGER')
+        
+    if len(fk_key_columns) > 0:
+        for i, col in enumerate(fk_key_columns):
+            fk_key_columns[i] = 'FOREIGN KEY ({}_id) REFERENCES {}(id)'.format(col, col)
     
-    columns_str = ', '.join(columns)
-    key_columns_str = ', '.join(key_columns)
+    all_columns_str = ', '.join(all_columns)
+    pk_key_columns_str = ', '.join(pk_key_columns)
+    fk_key_columns_str = ', '.join(fk_key_columns)
     
-    query = 'CREATE TABLE {} ({}, PRIMARY KEY ({}))'.format(
-        table_name, columns_str, key_columns_str)
+    if (len(fk_key_columns_str) > 0):
+        fk_key_columns_str = ', ' + fk_key_columns_str
+    
+    query = 'CREATE TABLE {} ({}, PRIMARY KEY ({}) {})'.format(
+        table_name, all_columns_str, pk_key_columns_str, fk_key_columns_str)
     
     c = connection.cursor()
     c.execute(query)
