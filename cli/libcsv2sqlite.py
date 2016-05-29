@@ -140,7 +140,7 @@ def patch_csv_data(fk_patch_data, all_csv_data):
 
 def set_mapping_defaults(all_csv_data, mappings, headers):
     def column_gen(column_id, rows_count):
-        for i in range(0, rows_count):
+        for i in range(0, min(rows_count, 1000)):
             yield all_csv_data[i][column_id]
             
     types = []
@@ -148,6 +148,8 @@ def set_mapping_defaults(all_csv_data, mappings, headers):
     rows_count = len(all_csv_data)
     
     for i in range(0, column_count):
+        # if the data type is specified in mappings file this is not necessary
+        # if the mapping column will be transformed use the return type of the transformations 
         python_type = guess_column_type(column_gen(i, rows_count))
         sqlite_type = dbutils.python_to_sqlite_type(python_type)
         types.append(sqlite_type)
@@ -186,20 +188,18 @@ def load_custom_transformations(mapping_path, custom_transformations_path):
             setattr(transformations, function_name, func)
 
 
-def data_type(value):    
-    try:
-        int(value)
+def data_type(value):
+
+    if value[0] == '+' or value[0] == '-':
+        value = value[1:]
+
+    if value.isdigit():
         return int
-    except ValueError:
-        pass
-        
-    try:
-        float(value)
+            
+    if value.count(".") == 1 and value.replace(".", "", 1).isdigit():
         return float
-    except ValueError:
-        pass
-        
-    return str
+                
+    else: return str
         
 
 def guess_column_type(generator):
