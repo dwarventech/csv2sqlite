@@ -5,4 +5,7 @@ __pycache__
 *.pyc
 .DS_Store
 
+*.sqlite
+*.sqlite3
+
 cli/tmp
