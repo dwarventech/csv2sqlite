@@ -32,9 +32,21 @@ def get_mappings_by_csv_index(mappings, index):
     return the_mappings
 
 
-def import_csv_row(row, table_name, mappings):
-    length = len(row)
+def import_csv(all_csv_data, table_name, mappings):
+    keys = []
     
+    for i, mapping in enumerate(mappings):
+        column_name = mapping['column_name']
+        
+        if 'key' in mapping and mapping['key'] == 'fk':
+            column_name = column_name + '_id'
+        
+        keys.append(column_name)
+        
+    dbutils.insert_many(table_name, keys, all_csv_data)
+
+
+def import_csv_row(row, table_name, mappings):
     values = {}
     
     for i, mapping in enumerate(mappings):
@@ -301,6 +313,8 @@ def csv_to_sqlite3(csv_path, mapping_path, db_path, csv_has_title_columns=False)
     # Substitute data with foreign key IDs
     patch_csv_data(fk_patch_data, all_csv_data)
     
-    # Import result
-    for row in all_csv_data:
-        import_csv_row(row, table_name, mappings)
+    # # Import result
+    # for row in all_csv_data:
+    #     import_csv_row(row, table_name, mappings)
+        
+    import_csv(all_csv_data, table_name, mappings)

@@ -102,27 +102,27 @@ class MappingTestFirstLine(unittest.TestCase):
         self.assertTrue(dbutils.column_exists('taxi', 'phone'))
 
 
-class CustomTransformationsTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.db_path = 'tmp/test5.sqlite3'
-        cls.mapping_path = 'test/test5.json'
-        cls.csv_path = 'test/test5.csv'
-        cls.csv_has_title_columns = True
+# class CustomTransformationsTest(unittest.TestCase):
+#     @classmethod
+#     def setUpClass(cls):
+#         cls.db_path = 'tmp/test5.sqlite3'
+#         cls.mapping_path = 'test/test5.json'
+#         cls.csv_path = 'test/test5.csv'
+#         cls.csv_has_title_columns = True
         
-        libcsv2sqlite.csv_to_sqlite3(
-            cls.csv_path,
-            cls.mapping_path,
-            cls.db_path,
-            cls.csv_has_title_columns)
+#         libcsv2sqlite.csv_to_sqlite3(
+#             cls.csv_path,
+#             cls.mapping_path,
+#             cls.db_path,
+#             cls.csv_has_title_columns)
         
-    @classmethod
-    def tearDownClass(cls):
-        dbutils.connection.close()
-        dbutils.delete_database(cls.db_path)
+#     @classmethod
+#     def tearDownClass(cls):
+#         dbutils.connection.close()
+#         dbutils.delete_database(cls.db_path)
 
-    def test_explode_existence(self):
-        self.assertTrue(hasattr(transformations, 'explode'))
+#     def test_explode_existence(self):
+#         self.assertTrue(hasattr(transformations, 'explode'))
 
 
 class WeirdHeadersTest(unittest.TestCase):

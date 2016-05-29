@@ -122,6 +122,27 @@ def insert(table_name, records):
     return success
 
 
+def insert_many(table_name, keys, records):
+    formatted_keys = ', '.join(["'{}'".format(key) for key in keys])
+    question_marks = ', '.join(['?' for i in range(0, len(keys))]) 
+    
+    query = 'INSERT INTO {} ({}) VALUES ({})'.format(
+        table_name, formatted_keys, question_marks)
+    
+    c = connection.cursor()
+    
+    try:
+        c.executemany(query, records)
+        connection.commit()
+        success = True
+    except sqlite3.IntegrityError:
+        success = False
+    
+    c.close()
+    
+    return success
+
+
 def count(table_name):
     c = connection.cursor()
     
