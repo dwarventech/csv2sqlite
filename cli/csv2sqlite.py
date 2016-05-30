@@ -1,6 +1,7 @@
 import argparse
 import libcsv2sqlite
 
+
 parser = argparse.ArgumentParser(
     description='Generate databases or import data into existing databases.'
 )
@@ -21,7 +22,7 @@ parser.add_argument(
     required=False,
     default='db.sqlite3'
 )
-     
+
 parser.add_argument(
     '--mapping', '-m',
     metavar='mapping.json',
@@ -38,12 +39,4 @@ parser.add_argument(
     default=False
 )
 
-
-args = parser.parse_args()
-
-# TODO - Pass all args in one thing
-libcsv2sqlite.csv_to_sqlite3(
-    args.input,
-    args.mapping,
-    args.output,
-    args.csv_has_title_columns)
+libcsv2sqlite.csv_to_sqlite3(parser.parse_args())

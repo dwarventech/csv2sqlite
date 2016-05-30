@@ -30,7 +30,7 @@ def sqlite_trim(input):
 
 
 def sqlite_random(input=None):
-    return str(random.randint(-9223372036854775808, 9223372036854775807))
+    return random.randint(-9223372036854775808, 9223372036854775807)
 
 
 def sqlite_round(input):
