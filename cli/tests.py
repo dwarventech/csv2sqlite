@@ -4,22 +4,28 @@ import unittest
 import transformations
 
 
+class Objectifier:
+    def __init__(self, dictionary):
+        for k, v in dictionary.items():
+            setattr(self, k, v)
+
+
 class MappingTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.args = {
+        cls.args = Objectifier({
             'input': 'test/test1.csv',
             'mapping': 'test/test1.json',
             'output': 'tmp/test1.sqlite3',
-        }
+        })
 
     @classmethod
     def tearDownClass(cls):
         dbutils.connection.close()
-        dbutils.delete_database(cls.args['output'])
+        dbutils.delete_database(cls.args.output)
 
     def test_load_mapping_config(self):
-        table_name, _, mappings = libcsv2sqlite.load_mapping_config(self.args['mapping'])
+        table_name, _, mappings = libcsv2sqlite.load_mapping_config(self.args.mapping)
 
         self.assertEqual(len(mappings), 5)
         self.assertEqual(table_name, 'person')
@@ -34,16 +40,16 @@ class MappingTest(unittest.TestCase):
 class MappingTestForeignKey(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.args = {
+        cls.args = Objectifier({
             'input': 'test/test2.csv',
             'mapping': 'test/test2.json',
             'output': 'tmp/test2.sqlite3',
-        }
+        })
 
     @classmethod
     def tearDownClass(cls):
         dbutils.connection.close()
-        dbutils.delete_database(cls.args['output'])
+        dbutils.delete_database(cls.args.output)
 
     def test_csv_to_sqlite3(self):
         libcsv2sqlite.csv_to_sqlite3(self.args)
@@ -55,16 +61,16 @@ class MappingTestForeignKey(unittest.TestCase):
 class MappingTestPrimaryKey(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.args = {
+        cls.args = Objectifier({
             'input': 'test/test3.csv',
             'mapping': 'test/test3.json',
             'output': 'tmp/test3.sqlite3',
-        }
+        })
 
     @classmethod
     def tearDownClass(cls):
         dbutils.connection.close()
-        dbutils.delete_database(cls.args['output'])
+        dbutils.delete_database(cls.args.output)
 
     def test_csv_to_sqlite3(self):
         libcsv2sqlite.csv_to_sqlite3(self.args)
@@ -76,19 +82,19 @@ class MappingTestPrimaryKey(unittest.TestCase):
 class MappingTestFirstLine(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.args = {
+        cls.args = Objectifier({
             'input': 'test/test4.csv',
             'mapping': 'test/test4.json',
             'output': 'tmp/test4.sqlite3',
             'csv_has_title_columns': True,
-        }
+        })
 
         libcsv2sqlite.csv_to_sqlite3(cls.args)
 
     @classmethod
     def tearDownClass(cls):
         dbutils.connection.close()
-        dbutils.delete_database(cls.args['output'])
+        dbutils.delete_database(cls.args.output)
 
     def test_csv_to_sqlite3(self):
         self.assertEqual(dbutils.count('taxi'), 2)
@@ -101,19 +107,19 @@ class MappingTestFirstLine(unittest.TestCase):
 class CustomTransformationsTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.args = {
+        cls.args = Objectifier({
             'input': 'test/test5.csv',
             'mapping': 'test/test5.json',
             'output': 'tmp/test5.sqlite3',
             'csv_has_title_columns': True,
-        }
+        })
 
         libcsv2sqlite.csv_to_sqlite3(cls.args)
 
     @classmethod
     def tearDownClass(cls):
         dbutils.connection.close()
-        dbutils.delete_database(cls.args['output'])
+        dbutils.delete_database(cls.args.output)
 
     def test_explode_existence(self):
         self.assertTrue(hasattr(transformations, 'explode'))
@@ -122,19 +128,19 @@ class CustomTransformationsTest(unittest.TestCase):
 class WeirdHeadersTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.args = {
+        cls.args = Objectifier({
             'input': 'test/test6.csv',
             'mapping': 'test/test6.json',
             'output': 'tmp/test6.sqlite3',
             'csv_has_title_columns': True,
-        }
+        })
 
         libcsv2sqlite.csv_to_sqlite3(cls.args)
 
     @classmethod
     def tearDownClass(cls):
         dbutils.connection.close()
-        dbutils.delete_database(cls.args['output'])
+        dbutils.delete_database(cls.args.output)
 
     def test_weird_headers(self):
         # Happy $8124 0*$ Email
@@ -147,19 +153,19 @@ class WeirdHeadersTest(unittest.TestCase):
 class AnonymousColumnsTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.args = {
+        cls.args = Objectifier({
             'input': 'test/test8.csv',
             'mapping': 'test/test8.json',
             'output': 'tmp/test8.sqlite3',
             'csv_has_title_columns': False,
-        }
+        })
 
         libcsv2sqlite.csv_to_sqlite3(cls.args)
 
     @classmethod
     def tearDownClass(cls):
         dbutils.connection.close()
-        dbutils.delete_database(cls.args['output'])
+        dbutils.delete_database(cls.args.output)
 
     def test_generated_column_names(self):
         self.assertTrue(dbutils.column_exists('email', 'column_0'))
@@ -169,19 +175,19 @@ class AnonymousColumnsTest(unittest.TestCase):
 class MissingColumnTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.args = {
+        cls.args = Objectifier({
             'input': 'test/test9.csv',
             'mapping': 'test/test9.json',
             'output': 'tmp/test9.sqlite3',
             'csv_has_title_columns': True
-        }
+        })
 
         libcsv2sqlite.csv_to_sqlite3(cls.args)
 
     @classmethod
     def tearDownClass(cls):
         dbutils.connection.close()
-        dbutils.delete_database(cls.args['output'])
+        dbutils.delete_database(cls.args.output)
 
     def test_generated_column_names(self):
         self.assertTrue(dbutils.column_exists('person', 'pretty_name'))

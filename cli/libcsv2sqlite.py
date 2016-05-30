@@ -269,13 +269,13 @@ def csv_read_file(csv_path, mappings):
 
 
 def csv_to_sqlite3(args):
-    csv_path = args['input']
-    mapping_path = args['mapping']
-    db_path = args['output']
+    csv_path = args.input
+    mapping_path = args.mapping
+    db_path = args.output
 
     try:
-        csv_has_title_columns = args['csv_has_title_columns']
-    except KeyError:
+        csv_has_title_columns = args.csv_has_title_columns
+    except AttributeError:
         csv_has_title_columns = False
 
     # Load config
