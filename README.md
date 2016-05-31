@@ -1,8 +1,8 @@
-#CSV to SQLite Importer
+# CSV to SQLite Importer
 
 csv2sqlite is a command line application that can transform CSV documents into fully operational SQLite3 databases.
 
-##Key features:
+## Key features:
 
 - Mapping file describing how each column is imported;
 - Support for data transformations before importing cell;
@@ -17,7 +17,7 @@ csv2sqlite is a command line application that can transform CSV documents into f
 - Guesses data types for columns when they are not specified;
 - Support for large files (> 100 MB);
     
-##Planned features:
+## Planned features:
 
 - Default values for every option;
 - Better feedback and error messages;
@@ -26,11 +26,11 @@ csv2sqlite is a command line application that can transform CSV documents into f
 - Read CSV file from URL;
 - Better documentation;
 
-##Mapping file:
+## Mapping file:
 
 Mapping files act like descriptors where each column can have their data type explicitly defined, or automatically assigned. Data can be transformed prior to being imported and even mapped to multiple columns;
 
-##Example usages:
+## Example usages:
 
 Import simple row data from CSV file and automatically generate primary keys for each record and transform names to uppercase
 
