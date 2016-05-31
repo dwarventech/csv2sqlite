@@ -15,12 +15,15 @@ csv2sqlite is a command line application that can transform CSV documents into f
 - Support for more default data transformations (based on SQLite core functions);
 - Generate foreign keys for normalization tables;
 - Guesses data types for columns when they are not specified;
+- Support for large files (> 100 MB);
     
 ##Planned features:
 
-- Support for large files;
-- Support for GZIP, ZIP, TAR;
 - Default values for every option;
+- Better feedback and error messages;
+- Support for large files (> 1 GB);
+- Support for GZIP, ZIP, TAR;
+- Read CSV file from URL;
 - Better documentation;
 
 ##Mapping file:
