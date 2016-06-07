@@ -5,6 +5,7 @@ import csv
 import sys
 import gzip
 import json
+import ntpath
 import zipfile
 import collections
 import importlib.util
@@ -121,17 +122,33 @@ def patch_csv_data(fk_patch_data, all_csv_data):
             row[index] = get_column_id(index, row[index], fk_patch_item['db_values'])
 
 
-def set_mapping_defaults(all_csv_data, mappings, headers):
+def fill_missing_mappings(column_length, mappings):
+    csv_indices = set()
+
+    for mapping in mappings:
+        csv_indices.add(mapping['csv_index'])
+
+    for column_index in range(0, column_length):
+        if column_index not in csv_indices:
+            mappings.append({ 'csv_index': column_index })
+
+    return mappings
+
+
+def set_mapping_defaults(all_csv_data, mappings, headers, default_mapping_action):
     def column_gen(column_id, row_count):
         for i in range(0, min(row_count, 1000)):
             yield all_csv_data[i][column_id]
 
     types = []
-    column_count = len(all_csv_data[0])
-    row_count = len(all_csv_data)
+    column_length = len(all_csv_data[0])
+    row_length = len(all_csv_data)
 
-    for i in range(0, column_count):
-        python_type = guess_column_type(column_gen(i, row_count))
+    if default_mapping_action == 'import':
+        mappings = fill_missing_mappings(column_length, mappings)
+
+    for i in range(0, column_length):
+        python_type = guess_column_type(column_gen(i, row_length))
         sqlite_type = dbutils.python_to_sqlite_type(python_type)
         types.append(sqlite_type)
 
@@ -252,7 +269,7 @@ def csv_transform(all_csv_data, mappings):
     return new_csv_data
 
 
-def csv_read_file(csv_path, mappings):
+def csv_read_file(csv_path):
     all_csv_data = []
 
     csv_file = open(csv_path, mode='r')
@@ -260,7 +277,6 @@ def csv_read_file(csv_path, mappings):
     reader = csv.reader(csv_file)
 
     for row in reader:
-        # changed_row = csv_read_row(row, mappings)
         all_csv_data.append(row)
 
     csv_file.close()
@@ -272,21 +288,24 @@ def csv_to_sqlite3(args):
     csv_path = args.input
     mapping_path = args.mapping
     db_path = args.output
-
-    try:
-        csv_has_title_columns = args.csv_has_title_columns
-    except AttributeError:
-        csv_has_title_columns = False
+    csv_has_title_columns = args.csv_has_title_columns
+    default_mapping_action = args.default_mapping_action
 
     # Load config
-    table_name, custom_transformations, mappings = load_mapping_config(mapping_path)
+    if mapping_path:
+        table_name, custom_transformations, mappings = load_mapping_config(mapping_path)
+    else:
+        path = ntpath.basename(csv_path)
+        table_name = os.path.splitext(path)[0]
+        custom_transformations = None
+        mappings = []
 
     # Load custom transformations if they exist
     if custom_transformations:
         load_custom_transformations(mapping_path, custom_transformations)
 
     # Load csv file into a list
-    all_csv_data = csv_read_file(csv_path, mappings)
+    all_csv_data = csv_read_file(csv_path)
 
     headers = []
 
@@ -297,8 +316,12 @@ def csv_to_sqlite3(args):
 
     dbutils.create_and_connect(db_path)
 
+    # If there are no mappings, assume that the user wants to import everything
+    if len(mappings) == 0:
+        default_mapping_action = 'import'
+
     # Set mapping defaults
-    set_mapping_defaults(all_csv_data, mappings, headers)
+    set_mapping_defaults(all_csv_data, mappings, headers, default_mapping_action)
 
     all_csv_data = csv_transform(all_csv_data, mappings)
 

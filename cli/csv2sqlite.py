@@ -16,11 +16,11 @@ parser.add_argument(
 
 parser.add_argument(
     '--output', '-o',
-    metavar='db.sqlite3',
+    metavar='db.sqlite',
     type=str,
     help='Path of the destination database file.',
     required=False,
-    default='db.sqlite3'
+    default='db.sqlite'
 )
 
 parser.add_argument(
@@ -28,7 +28,7 @@ parser.add_argument(
     metavar='mapping.json',
     type=str,
     help='Path of the JSON mapping file, which describes how to import data',
-    required=True
+    required=False
 )
 
 parser.add_argument(
@@ -37,6 +37,15 @@ parser.add_argument(
     action='store_true',
     required=False,
     default=False
+)
+
+parser.add_argument(
+    '--default-mapping-action', '-d',
+    help='Action to take on unmapped columns',
+    type=str,
+    required=False,
+    default='import',
+    choices=['import', 'ignore']
 )
 
 libcsv2sqlite.csv_to_sqlite3(parser.parse_args())

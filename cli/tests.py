@@ -17,6 +17,8 @@ class MappingTest(unittest.TestCase):
             'input': 'test/test1.csv',
             'mapping': 'test/test1.json',
             'output': 'tmp/test1.sqlite3',
+            'default_mapping_action': 'ignore',
+            'csv_has_title_columns': False,
         })
 
     @classmethod
@@ -44,6 +46,8 @@ class MappingTestForeignKey(unittest.TestCase):
             'input': 'test/test2.csv',
             'mapping': 'test/test2.json',
             'output': 'tmp/test2.sqlite3',
+            'default_mapping_action': 'ignore',
+            'csv_has_title_columns': False,
         })
 
     @classmethod
@@ -65,6 +69,8 @@ class MappingTestPrimaryKey(unittest.TestCase):
             'input': 'test/test3.csv',
             'mapping': 'test/test3.json',
             'output': 'tmp/test3.sqlite3',
+            'default_mapping_action': 'ignore',
+            'csv_has_title_columns': False,
         })
 
     @classmethod
@@ -86,6 +92,7 @@ class MappingTestFirstLine(unittest.TestCase):
             'input': 'test/test4.csv',
             'mapping': 'test/test4.json',
             'output': 'tmp/test4.sqlite3',
+            'default_mapping_action': 'ignore',
             'csv_has_title_columns': True,
         })
 
@@ -111,6 +118,7 @@ class CustomTransformationsTest(unittest.TestCase):
             'input': 'test/test5.csv',
             'mapping': 'test/test5.json',
             'output': 'tmp/test5.sqlite3',
+            'default_mapping_action': 'ignore',
             'csv_has_title_columns': True,
         })
 
@@ -132,6 +140,7 @@ class WeirdHeadersTest(unittest.TestCase):
             'input': 'test/test6.csv',
             'mapping': 'test/test6.json',
             'output': 'tmp/test6.sqlite3',
+            'default_mapping_action': 'ignore',
             'csv_has_title_columns': True,
         })
 
@@ -157,6 +166,7 @@ class AnonymousColumnsTest(unittest.TestCase):
             'input': 'test/test8.csv',
             'mapping': 'test/test8.json',
             'output': 'tmp/test8.sqlite3',
+            'default_mapping_action': 'ignore',
             'csv_has_title_columns': False,
         })
 
@@ -179,6 +189,7 @@ class MissingColumnTest(unittest.TestCase):
             'input': 'test/test9.csv',
             'mapping': 'test/test9.json',
             'output': 'tmp/test9.sqlite3',
+            'default_mapping_action': 'ignore',
             'csv_has_title_columns': True
         })
 
@@ -193,6 +204,81 @@ class MissingColumnTest(unittest.TestCase):
         self.assertTrue(dbutils.column_exists('person', 'pretty_name'))
         self.assertTrue(dbutils.column_exists('person', 'Age'))
         self.assertFalse(dbutils.column_exists('person', 'Gender'))
+
+
+class DefaultMappingActionTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.args = Objectifier({
+            'input': 'test/test12.csv',
+            'mapping': 'test/test12.json',
+            'output': 'tmp/test12.sqlite3',
+            'default_mapping_action': 'import',
+            'csv_has_title_columns': True,
+        })
+
+        libcsv2sqlite.csv_to_sqlite3(cls.args)
+
+    @classmethod
+    def tearDownClass(cls):
+        dbutils.connection.close()
+        dbutils.delete_database(cls.args.output)
+
+    def test_generated_column_names(self):
+        self.assertTrue(dbutils.column_exists('person', 'name'))
+        self.assertTrue(dbutils.column_exists('person', 'phone_model'))
+        self.assertTrue(dbutils.column_exists('person', 'age'))
+        self.assertTrue(dbutils.column_exists('person', 'juice'))
+
+
+class DefaultMappingActionIgnoreTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.args = Objectifier({
+            'input': 'test/test12.csv',
+            'mapping': 'test/test12.json',
+            'output': 'tmp/test12.sqlite3',
+            'default_mapping_action': 'ignore',
+            'csv_has_title_columns': True,
+        })
+
+        libcsv2sqlite.csv_to_sqlite3(cls.args)
+
+    @classmethod
+    def tearDownClass(cls):
+        dbutils.connection.close()
+        dbutils.delete_database(cls.args.output)
+
+    def test_generated_column_names(self):
+        self.assertTrue(dbutils.column_exists('person', 'name'))
+        self.assertTrue(dbutils.column_exists('person', 'phone_model'))
+        self.assertFalse(dbutils.column_exists('person', 'age'))
+        self.assertFalse(dbutils.column_exists('person', 'juice'))
+
+
+class DefaultMappingTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.args = Objectifier({
+            'input': 'test/test12.csv',
+            'mapping': '',
+            'output': 'tmp/test12.sqlite3',
+            'default_mapping_action': 'ignore',
+            'csv_has_title_columns': True,
+        })
+
+        libcsv2sqlite.csv_to_sqlite3(cls.args)
+
+    @classmethod
+    def tearDownClass(cls):
+        dbutils.connection.close()
+        dbutils.delete_database(cls.args.output)
+
+    def test_generated_column_names(self):
+        self.assertTrue(dbutils.column_exists('test12', 'name'))
+        self.assertTrue(dbutils.column_exists('test12', 'phone_model'))
+        self.assertTrue(dbutils.column_exists('test12', 'age'))
+        self.assertTrue(dbutils.column_exists('test12', 'juice'))
 
 
 class DbUtilsTest(unittest.TestCase):
