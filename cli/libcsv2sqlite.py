@@ -23,16 +23,6 @@ def load_mapping_config(mapping_path):
         return (j['table_name'], transforms, j['mappings'])
 
 
-def get_mappings_by_csv_index(mappings, index):
-    the_mappings = []
-
-    for mapping in mappings:
-        if mapping['csv_index'] == index:
-            the_mappings.append(mapping)
-
-    return the_mappings
-
-
 def import_csv(all_csv_data, table_name, mappings):
     keys = []
 
@@ -151,6 +141,14 @@ def set_mapping_defaults(all_csv_data, mappings, headers, default_mapping_action
         python_type = guess_column_type(column_gen(i, row_length))
         sqlite_type = dbutils.python_to_sqlite_type(python_type)
         types.append(sqlite_type)
+
+    # Patch named indices (convert names to position)
+    for mapping in mappings:
+        mapping_index = mapping['csv_index']
+        if type(mapping_index) == str:
+            if mapping_index in headers:
+                mapping['csv_index'] = headers.index(mapping_index)
+
 
     for mapping in mappings:
         i = mapping['csv_index']
@@ -295,6 +293,11 @@ def csv_to_sqlite3(args):
     if mapping_path:
         table_name, custom_transformations, mappings = load_mapping_config(mapping_path)
     else:
+        # If no mapping file path was specified, consider
+        # the default mapping action as import
+        # (it doesn't make sense to be anything else)
+        default_mapping_action = 'import'
+
         path = ntpath.basename(csv_path)
         table_name = os.path.splitext(path)[0]
         custom_transformations = None
@@ -315,10 +318,6 @@ def csv_to_sqlite3(args):
         all_csv_data = all_csv_data[1:]
 
     dbutils.create_and_connect(db_path)
-
-    # If there are no mappings, assume that the user wants to import everything
-    if len(mappings) == 0:
-        default_mapping_action = 'import'
 
     # Set mapping defaults
     set_mapping_defaults(all_csv_data, mappings, headers, default_mapping_action)

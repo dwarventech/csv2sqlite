@@ -1,0 +1,11 @@
+{
+    "table_name": "person",
+    "mappings": [
+        {
+            "csv_index": "name"
+        },
+        {
+            "csv_index": "age"
+        }
+    ]
+}

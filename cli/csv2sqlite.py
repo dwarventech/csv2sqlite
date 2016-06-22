@@ -44,7 +44,7 @@ parser.add_argument(
     help='Action to take on unmapped columns',
     type=str,
     required=False,
-    default='import',
+    default='ignore',
     choices=['import', 'ignore']
 )
 

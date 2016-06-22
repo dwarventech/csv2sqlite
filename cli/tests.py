@@ -281,6 +281,30 @@ class DefaultMappingTest(unittest.TestCase):
         self.assertTrue(dbutils.column_exists('test12', 'juice'))
 
 
+class NamedMappingTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.args = Objectifier({
+            'input': 'test/test13.csv',
+            'mapping': 'test/test13.json',
+            'output': 'tmp/test13.sqlite3',
+            'default_mapping_action': 'ignore',
+            'csv_has_title_columns': True,
+        })
+
+        libcsv2sqlite.csv_to_sqlite3(cls.args)
+
+    @classmethod
+    def tearDownClass(cls):
+        dbutils.connection.close()
+        dbutils.delete_database(cls.args.output)
+
+    def test_generated_column_names(self):
+        self.assertTrue(dbutils.column_exists('person', 'name'))
+        self.assertTrue(dbutils.column_exists('person', 'age'))
+        self.assertFalse(dbutils.column_exists('person', 'juice'))
+
+
 class DbUtilsTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

@@ -23,10 +23,10 @@ csv2sqlite is a command line application that can transform CSV documents into f
 
 - csv_index could be a name as well as an index;
 - Better feedback and error messages;
+- Better documentation;
 - Support for larger files (> 1 GB);
 - Support for GZIP, ZIP, TAR;
 - Read CSV file from URL;
-- Better documentation;
 
 ## Mapping file:
 
