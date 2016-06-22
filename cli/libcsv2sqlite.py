@@ -15,12 +15,28 @@ import dbutils
 import transformations
 
 
-def load_mapping_config(mapping_path):
-    with open(mapping_path) as data_file:
-        j = json.load(data_file)
+def load_and_validate_mapping_config(mapping_path, default_table_name, default_mapping_action):
+    custom_transformations = None
+    mappings = []
+    table_name = default_table_name
+    
+    if mapping_path:
+        with open(mapping_path) as data_file:
+            json_data = json.load(data_file)
 
-        transforms = j['transformations'] if 'transformations' in j else None
-        return (j['table_name'], transforms, j['mappings'])
+            if 'table_name' in json_data:
+                table_name = json_data['table_name']
+
+            if 'mappings' in json_data:
+                mappings = json_data['mappings']
+
+            if 'transformations' in json_data:
+                custom_transformations = json_data['transformations']
+    
+    if len(mappings) == 0:
+        default_mapping_action = 'import'
+
+    return (table_name, custom_transformations, mappings, default_mapping_action)
 
 
 def import_csv(all_csv_data, table_name, mappings):
@@ -282,27 +298,46 @@ def csv_read_file(csv_path):
     return all_csv_data
 
 
+def print_error(ex):
+    errors = {
+        FileNotFoundError: lambda: 'File not found: "{}"'.format(ex.filename),
+        PermissionError: lambda: 'File inaccessible: "{}"'.format(ex.filename),
+        IOError: lambda: 'Unknown error reading file: "{}"'.format(ex.filename),
+        json.JSONDecodeError: lambda: 'Mapping file - JSON syntax error ({}:{}): {}'.format(ex.lineno, ex.colno, ex.msg),
+        Exception: lambda: ex.args[0]
+    }
+
+    try:
+        error = errors[type(ex)]
+        print(error())
+    except KeyError:
+        print('Unknown error: {} - {}'.format(type(ex).__name__, str(ex)))
+        raise ex
+
+
+
 def csv_to_sqlite3(args):
+    try:
+        _csv_to_sqlite3(args)
+    except Exception as e:
+        print_error(e)
+        exit(1)
+        
+
+def _csv_to_sqlite3(args):
     csv_path = args.input
     mapping_path = args.mapping
     db_path = args.output
     csv_has_title_columns = args.csv_has_title_columns
     default_mapping_action = args.default_mapping_action
 
+    path = ntpath.basename(csv_path)
+    default_table_name = os.path.splitext(path)[0]
+
     # Load config
-    if mapping_path:
-        table_name, custom_transformations, mappings = load_mapping_config(mapping_path)
-    else:
-        # If no mapping file path was specified, consider
-        # the default mapping action as import
-        # (it doesn't make sense to be anything else)
-        default_mapping_action = 'import'
-
-        path = ntpath.basename(csv_path)
-        table_name = os.path.splitext(path)[0]
-        custom_transformations = None
-        mappings = []
-
+    table_name, custom_transformations, mappings, default_mapping_action = \
+        load_and_validate_mapping_config(mapping_path, default_table_name, default_mapping_action)
+    
     # Load custom transformations if they exist
     if custom_transformations:
         load_custom_transformations(mapping_path, custom_transformations)

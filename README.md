@@ -18,10 +18,10 @@ csv2sqlite is a command line application that can transform CSV documents into f
 - Support for large files (> 100 MB);
 - Choose to ignore or import columns by default;
 - Default values for every option;
-    
+- Named CSV indices can be used when CSV file has headers in the first line;
+
 ## Planned features:
 
-- csv_index could be a name as well as an index;
 - Better feedback and error messages;
 - Better documentation;
 - Support for larger files (> 1 GB);

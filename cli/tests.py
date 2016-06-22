@@ -26,8 +26,8 @@ class MappingTest(unittest.TestCase):
         dbutils.connection.close()
         dbutils.delete_database(cls.args.output)
 
-    def test_load_mapping_config(self):
-        table_name, _, mappings = libcsv2sqlite.load_mapping_config(self.args.mapping)
+    def test_load_and_validate_mapping_config(self):
+        table_name, _, mappings, _ = libcsv2sqlite.load_and_validate_mapping_config(self.args.mapping, 'bla', 'ble')
 
         self.assertEqual(len(mappings), 5)
         self.assertEqual(table_name, 'person')

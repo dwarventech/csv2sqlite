@@ -3,14 +3,16 @@ import libcsv2sqlite
 
 
 parser = argparse.ArgumentParser(
-    description='Generate databases or import data into existing databases.'
+    description='Import CSV files into new or existing SQLite databases.'
 )
 
-parser.add_argument(
+required_named = parser.add_argument_group('required arguments')
+
+required_named.add_argument(
     '--input', '-i',
     metavar='data.csv',
     type=str,
-    help='Path of the origin data file',
+    help='path of the source CSV file',
     required=True
 )
 
@@ -18,7 +20,7 @@ parser.add_argument(
     '--output', '-o',
     metavar='db.sqlite',
     type=str,
-    help='Path of the destination database file.',
+    help='path of the destination database file',
     required=False,
     default='db.sqlite'
 )
@@ -27,13 +29,13 @@ parser.add_argument(
     '--mapping', '-m',
     metavar='mapping.json',
     type=str,
-    help='Path of the JSON mapping file, which describes how to import data',
+    help='a mapping file allows to control how data is imported. For more details, refer to the examples',
     required=False
 )
 
 parser.add_argument(
     '--csv-has-title-columns', '-t',
-    help='Indicates if the first line in the CSV file contains title columns',
+    help="indicates if the first line in the CSV file contains title columns to be used as column tables. In the case of mapped foreign keys, they'll be used as table names",
     action='store_true',
     required=False,
     default=False
@@ -41,7 +43,7 @@ parser.add_argument(
 
 parser.add_argument(
     '--default-mapping-action', '-d',
-    help='Action to take on unmapped columns',
+    help='default action to take if an unmapped column (not in mapping file) is found while importing',
     type=str,
     required=False,
     default='ignore',
