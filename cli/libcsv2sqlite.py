@@ -15,7 +15,7 @@ import dbutils
 import transformations
 
 
-def load_and_validate_mapping_config(mapping_path, default_table_name, default_mapping_action):
+def load_and_process_mapping_config(mapping_path, default_table_name, default_mapping_action):
     custom_transformations = None
     mappings = []
     table_name = default_table_name
@@ -336,7 +336,7 @@ def _csv_to_sqlite3(args):
 
     # Load config
     table_name, custom_transformations, mappings, default_mapping_action = \
-        load_and_validate_mapping_config(mapping_path, default_table_name, default_mapping_action)
+        load_and_process_mapping_config(mapping_path, default_table_name, default_mapping_action)
     
     # Load custom transformations if they exist
     if custom_transformations:

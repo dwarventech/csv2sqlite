@@ -22,6 +22,7 @@ csv2sqlite is a command line application that can transform CSV documents into f
 
 ## Planned features:
 
+- Review why pk generation is not working
 - Better feedback and error messages;
 - Better documentation;
 - Support for larger files (> 1 GB);
