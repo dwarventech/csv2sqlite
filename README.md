@@ -20,14 +20,14 @@ csv2sqlite is a command line application that can transform CSV documents into f
 - Default values for every option;
 - Named CSV indices can be used when CSV file has headers in the first line;
 
-## Planned features:
+## Planned features or pending items:
 
-- Review why pk generation is not working
 - Better feedback and error messages;
 - Better documentation;
 - Support for larger files (> 1 GB);
 - Support for GZIP, ZIP, TAR;
 - Read CSV file from URL;
+- Move test folder one level up;
 
 ## Mapping file:
 

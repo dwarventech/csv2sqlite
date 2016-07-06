@@ -50,6 +50,20 @@ def column_exists(table_name, column_name):
     return False
 
 
+def column_is_pk(table_name, column_name):
+    cursor = connection.cursor()
+
+    cursor.execute("PRAGMA table_info('{}')".format(table_name))
+    results = cursor.fetchall()
+
+    for result in results:
+        if result[1] == column_name:
+            return True if result[5] == 1 else False
+
+    cursor.close()
+
+    return False
+
 def create_table(table_name, mappings=[]):
     if table_exists(table_name):
         return False

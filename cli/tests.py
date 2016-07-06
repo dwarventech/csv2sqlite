@@ -430,4 +430,25 @@ class DuplicateMappingColumnNameTest(unittest.TestCase):
         self.assertEqual(mappings[4]['column_name'], 'Animal_1')
 
 
+class PkColumnGenerationTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.args = Objectifier({
+            'input': 'test/test_pk_column_generation.csv',
+            'mapping': 'test/test_pk_column_generation.json',
+            'output': 'tmp/test_pk_column_generation.sqlite3',
+            'default_mapping_action': 'import',
+            'csv_has_title_columns': True,
+        })
+
+    @classmethod
+    def tearDownClass(cls):
+        dbutils.connection.close()
+        dbutils.delete_database(cls.args.output)
+
+    def test_column_generation(self):
+        libcsv2sqlite.csv_to_sqlite3(self.args)
+        self.assertTrue(dbutils.column_is_pk('trucks', 'truck_id'))
+
+
 unittest.main()

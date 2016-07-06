@@ -1,0 +1,9 @@
+{
+    "table_name": "trucks",
+    "mappings": [
+        {
+            "key": "pk",
+            "csv_index": 0
+        }
+    ]
+}
