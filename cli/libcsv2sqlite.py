@@ -11,8 +11,9 @@ import collections
 import importlib.util
 from operator import itemgetter
 
-import dbutils
 import transformations
+import exceptions
+import dbutils
 
 
 def load_and_process_mapping_config(mapping_path, default_table_name, default_mapping_action):
@@ -141,10 +142,17 @@ def fill_missing_mappings(column_length, mappings):
     return mappings
 
 
+def clean_name(name):
+    return re.sub('[^0-9a-zA-Z]+', '_', name)
+
+
 def set_mapping_defaults(all_csv_data, mappings, headers, default_mapping_action):
-    def column_gen(column_id, row_count):
+    def column_gen(column_index, row_count):
         for i in range(0, min(row_count, 1000)):
-            yield all_csv_data[i][column_id]
+            try:
+                yield all_csv_data[i][column_index]
+            except IndexError:
+                raise exceptions.CsvColumnNotFound(i + 1, column_index)
 
     types = []
     column_length = len(all_csv_data[0])
@@ -175,7 +183,7 @@ def set_mapping_defaults(all_csv_data, mappings, headers, default_mapping_action
         if 'column_name' not in mapping:
             if len(headers) > 0:
                 # Replace column name (do some cleaning first)
-                mapping['column_name'] = re.sub('[^0-9a-zA-Z]+', '_', headers[i])
+                mapping['column_name'] = clean_name(headers[i])
             else:
                 mapping['column_name'] = 'column_' + str(i)
 
@@ -298,12 +306,29 @@ def csv_read_file(csv_path):
     return all_csv_data
 
 
+def print_report(my_args, rows_pre_count, table_name, fk_mappings):
+    # TODO: Created or Appended
+    print('Added {} records to database {}'.format(
+        dbutils.count(table_name) - rows_pre_count,
+        ntpath.basename(my_args.output)
+    ))
+    print('Options: ({}, {}CSV TITLE COLUMNS)'.format(        
+        my_args.default_mapping_action.upper(),
+        '' if my_args.csv_has_title_columns else 'NO '
+    ))
+    print('Database map:')
+    print(' {} (MAIN TABLE)'.format(table_name))
+    for fk_mapping in fk_mappings:
+        print('  └─ {} (REFERENCE TABLE)'.format(fk_mapping['column_name']))
+    print('')
+
 def print_error(ex):
     errors = {
         FileNotFoundError: lambda: 'File not found: "{}"'.format(ex.filename),
         PermissionError: lambda: 'File inaccessible: "{}"'.format(ex.filename),
         IOError: lambda: 'Unknown error reading file: "{}"'.format(ex.filename),
         json.JSONDecodeError: lambda: 'Mapping file - JSON syntax error ({}:{}): {}'.format(ex.lineno, ex.colno, ex.msg),
+        exceptions.CsvColumnNotFound: lambda: 'Mapped column [{}] was not found in CSV file at line {}'.format(ex.column_index, ex.line_number),
         Exception: lambda: ex.args[0]
     }
 
@@ -313,7 +338,6 @@ def print_error(ex):
     except KeyError:
         print('Unknown error: {} - {}'.format(type(ex).__name__, str(ex)))
         raise ex
-
 
 
 def csv_to_sqlite3(args):
@@ -338,6 +362,9 @@ def _csv_to_sqlite3(args):
     table_name, custom_transformations, mappings, default_mapping_action = \
         load_and_process_mapping_config(mapping_path, default_table_name, default_mapping_action)
     
+    # Clean table name
+    table_name = clean_name(table_name)
+
     # Load custom transformations if they exist
     if custom_transformations:
         load_custom_transformations(mapping_path, custom_transformations)
@@ -361,10 +388,10 @@ def _csv_to_sqlite3(args):
 
     # Create database table
     dbutils.create_table(table_name, mappings)
+    rows_pre_count = dbutils.count(table_name)
 
     # Load fk tables
     fk_mappings, _ = read_key_mappings(all_csv_data, mappings)
-
     fk_patch_data = fk_mappings_to_database(fk_mappings)
 
     # Substitute data with foreign key IDs
@@ -372,3 +399,5 @@ def _csv_to_sqlite3(args):
 
     # Import result
     import_csv(all_csv_data, table_name, mappings)
+
+    print_report(args, rows_pre_count, table_name, fk_mappings)

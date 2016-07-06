@@ -170,7 +170,6 @@ def count(table_name):
 
     return results[0]
 
-
 def select_all(table_name, columns=None):
     cursor = connection.cursor()
 
